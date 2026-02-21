@@ -1,35 +1,64 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { FiGithub, FiLinkedin, FiTwitter, FiMail, FiExternalLink } from 'react-icons/fi';
 import './App.css';
 
-// Import 3D Components
+// 3D Components
 import Hero3D from './components/Hero3D';
-import FloatingShapes from './components/FloatingShapes';
 import Project3D from './components/Project3D';
 import Skills3D from './components/Skills3D';
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  
   const { scrollYProgress } = useScroll();
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [1, 0.8, 0.8, 0]);
+  const scaleProgress = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
+  
+  const cursorRef = useRef(null);
+  const cursorFollowerRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
+
+    const handleMouseMove = (e) => {
+      if (cursorRef.current && cursorFollowerRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        cursorFollowerRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      }
+      setCursorPos({ x: e.clientX, y: e.clientY });
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
+  // Section refs for animation
   const [heroRef, heroInView] = useInView({ threshold: 0.5 });
   const [aboutRef, aboutInView] = useInView({ threshold: 0.3 });
   const [projectsRef, projectsInView] = useInView({ threshold: 0.2 });
   const [skillsRef, skillsInView] = useInView({ threshold: 0.3 });
   const [contactRef, contactInView] = useInView({ threshold: 0.3 });
+
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setActiveSection(sectionId);
+    }
+  };
 
   const projects = [
     {
@@ -37,9 +66,8 @@ function App() {
       title: "NEBULA",
       description: "AI-Powered Creative Platform",
       category: "Web Application",
-      image: "/project1.jpg",
-      color: "#ff6b6b",
       technologies: ["React", "Three.js", "TensorFlow", "Node.js"],
+      color: "#ff6b6b",
       link: "#"
     },
     {
@@ -47,9 +75,8 @@ function App() {
       title: "QUANTUM",
       description: "3D Interactive Experience",
       category: "Interactive Installation",
-      image: "/project2.jpg",
-      color: "#4ecdc4",
       technologies: ["WebGL", "GSAP", "Web Audio API", "Next.js"],
+      color: "#4ecdc4",
       link: "#"
     },
     {
@@ -57,9 +84,8 @@ function App() {
       title: "INFINITY",
       description: "Metaverse Gallery",
       category: "VR Experience",
-      image: "/project3.jpg",
-      color: "#a8e6cf",
       technologies: ["A-Frame", "Socket.io", "Express", "MongoDB"],
+      color: "#a8e6cf",
       link: "#"
     },
     {
@@ -67,27 +93,44 @@ function App() {
       title: "ECHO",
       description: "Spatial Audio Visualizer",
       category: "Creative Coding",
-      image: "/project4.jpg",
-      color: "#ffd93d",
       technologies: ["Three.js", "Web Audio API", "GLSL", "React"],
+      color: "#ffd93d",
       link: "#"
     }
   ];
 
   const skills = [
-    { name: "React", level: 95, color: "#61dafb" },
-    { name: "Three.js", level: 90, color: "#ff6b6b" },
-    { name: "WebGL", level: 85, color: "#4ecdc4" },
-    { name: "GSAP", level: 88, color: "#a8e6cf" },
-    { name: "Node.js", level: 82, color: "#ffd93d" },
-    { name: "TypeScript", level: 87, color: "#6b5b95" }
+    { name: "React", percentage: 95, color: "#61dafb" },
+    { name: "Three.js", percentage: 90, color: "#ff6b6b" },
+    { name: "WebGL", percentage: 85, color: "#4ecdc4" },
+    { name: "GSAP", percentage: 88, color: "#a8e6cf" },
+    { name: "Node.js", percentage: 82, color: "#ffd93d" },
+    { name: "TypeScript", percentage: 87, color: "#6b5b95" }
+  ];
+
+  const navItems = [
+    { id: 'home', label: 'Home', number: '01' },
+    { id: 'about', label: 'About', number: '02' },
+    { id: 'projects', label: 'Projects', number: '03' },
+    { id: 'skills', label: 'Skills', number: '04' },
+    { id: 'contact', label: 'Contact', number: '05' }
   ];
 
   return (
-    <div className="app">
+    <div 
+      className="app"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       {/* Custom Cursor */}
-      <div className="cursor"></div>
-      <div className="cursor-follower"></div>
+      <div 
+        ref={cursorRef}
+        className={`cursor ${isHovering ? 'active' : ''}`}
+      ></div>
+      <div 
+        ref={cursorFollowerRef}
+        className={`cursor-follower ${isHovering ? 'active' : ''}`}
+      ></div>
 
       {/* Navigation */}
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -99,28 +142,26 @@ function App() {
             transition={{ duration: 1 }}
           >
             <span className="logo-text">PORTFOLIO</span>
-            <span className="logo-dot">●</span>
           </motion.div>
 
-          <motion.ul 
-            className="nav-menu"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-          >
-            {['Home', 'About', 'Projects', 'Skills', 'Contact'].map((item, index) => (
-              <motion.li 
-                key={item}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+          <ul className="nav-menu">
+            {navItems.map((item, index) => (
+              <motion.li
+                key={item.id}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <a href={`#${item.toLowerCase()}`} className="nav-link">
-                  <span className="nav-index">0{index + 1}</span>
-                  {item}
-                </a>
+                <button
+                  onClick={() => scrollToSection(item.id)}
+                  className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
+                >
+                  <span className="nav-number">{item.number}</span>
+                  <span className="nav-label">{item.label}</span>
+                </button>
               </motion.li>
             ))}
-          </motion.ul>
+          </ul>
 
           <motion.button 
             className="menu-toggle"
@@ -133,19 +174,19 @@ function App() {
         </div>
       </nav>
 
-      {/* Hero Section with 3D */}
+      {/* Hero Section */}
       <section id="home" ref={heroRef} className="hero-section">
         <div className="hero-content">
           <motion.div 
             className="hero-text"
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.5, delay: 0.5 }}
+            transition={{ duration: 1.5 }}
           >
             <motion.span 
-              className="hero-greeting"
+              className="hero-tag"
               animate={{ 
-                boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 20px 10px rgba(255,255,255,0.1)', '0 0 0 0 rgba(255,255,255,0)']
+                boxShadow: ['0 0 0 0 rgba(255,107,107,0)', '0 0 20px 10px rgba(255,107,107,0.1)', '0 0 0 0 rgba(255,107,107,0)']
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -156,7 +197,7 @@ function App() {
               <motion.span
                 initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1, delay: 0.8 }}
+                transition={{ duration: 1, delay: 0.3 }}
               >
                 CREATING
               </motion.span>
@@ -165,7 +206,7 @@ function App() {
                 className="gradient-text"
                 initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1, delay: 1 }}
+                transition={{ duration: 1, delay: 0.6 }}
               >
                 IMMERSIVE
               </motion.span>
@@ -173,7 +214,7 @@ function App() {
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 1.2 }}
+                transition={{ duration: 1, delay: 0.9 }}
               >
                 DIGITAL WORLDS
               </motion.span>
@@ -183,22 +224,23 @@ function App() {
               className="hero-description"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 1.5 }}
+              transition={{ duration: 1, delay: 1.2 }}
             >
-              Pushing the boundaries of web experiences through 
-              cutting-edge 3D technologies and creative innovation
+              Pushing the boundaries of web experiences through cutting-edge 
+              3D technologies and creative innovation
             </motion.p>
 
             <motion.div 
-              className="hero-cta"
+              className="hero-buttons"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 1.8 }}
+              transition={{ duration: 1, delay: 1.5 }}
             >
               <motion.button 
                 className="primary-btn"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => scrollToSection('projects')}
               >
                 View Projects
                 <span className="btn-icon">→</span>
@@ -218,22 +260,20 @@ function App() {
               className="hero-stats"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 2 }}
+              transition={{ duration: 1, delay: 1.8 }}
             >
-              {[
-                { value: '5+', label: 'Years Experience' },
-                { value: '50+', label: 'Projects' },
-                { value: '20+', label: 'Awards' }
-              ].map((stat, index) => (
-                <motion.div 
-                  key={index}
-                  className="stat-item"
-                  whileHover={{ y: -5 }}
-                >
-                  <span className="stat-value">{stat.value}</span>
-                  <span className="stat-label">{stat.label}</span>
-                </motion.div>
-              ))}
+              <div className="stat-item">
+                <span className="stat-value">5+</span>
+                <span className="stat-label">Years Experience</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">50+</span>
+                <span className="stat-label">Projects</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">20+</span>
+                <span className="stat-label">Awards</span>
+              </div>
             </motion.div>
           </motion.div>
 
@@ -256,16 +296,7 @@ function App() {
               <directionalLight position={[10, 10, 5]} intensity={1} />
               <pointLight position={[-10, -10, -5]} intensity={0.5} />
               <Hero3D />
-              <FloatingShapes count={20} />
               <Environment preset="city" />
-              <ContactShadows 
-                opacity={0.4} 
-                scale={20} 
-                blur={1} 
-                far={10} 
-                resolution={256} 
-                color="#000000" 
-              />
               <OrbitControls 
                 enableZoom={false} 
                 enablePan={false} 
@@ -289,7 +320,7 @@ function App() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="section-title">
-              <span className="section-number">01</span>
+              <span className="section-number">02</span>
               About Me
             </h2>
             <div className="section-line"></div>
@@ -329,14 +360,16 @@ function App() {
             >
               <div className="image-container">
                 <div className="image-overlay"></div>
-                <img src="https://via.placeholder.com/600x800" alt="Profile" />
+                <div className="profile-placeholder">
+                  <span>Profile</span>
+                </div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Projects Section with 3D */}
+      {/* Projects Section */}
       <section id="projects" ref={projectsRef} className="projects-section">
         <div className="section-container">
           <motion.div 
@@ -356,7 +389,7 @@ function App() {
             {projects.map((project, index) => (
               <motion.div
                 key={project.id}
-                className="project-item"
+                className="project-card"
                 initial={{ opacity: 0, y: 50 }}
                 animate={projectsInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
@@ -372,23 +405,19 @@ function App() {
                   </Canvas>
                 </div>
                 
-                <div className="project-info">
+                <div className="project-content">
                   <span className="project-category">{project.category}</span>
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
+                  <h3 className="project-title">{project.title}</h3>
+                  <p className="project-description">{project.description}</p>
                   <div className="project-tech">
                     {project.technologies.map((tech, i) => (
                       <span key={i} className="tech-tag">{tech}</span>
                     ))}
                   </div>
-                  <motion.a 
-                    href={project.link} 
-                    className="project-link"
-                    whileHover={{ x: 5 }}
-                  >
+                  <a href={project.link} className="project-link">
                     View Project
-                    <span className="link-arrow">→</span>
-                  </motion.a>
+                    <FiExternalLink />
+                  </a>
                 </div>
               </motion.div>
             ))}
@@ -396,7 +425,7 @@ function App() {
         </div>
       </section>
 
-      {/* Skills Section with 3D */}
+      {/* Skills Section */}
       <section id="skills" ref={skillsRef} className="skills-section">
         <div className="section-container">
           <motion.div 
@@ -433,16 +462,16 @@ function App() {
                   animate={skillsInView ? { opacity: 1, x: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <div className="skill-header">
+                  <div className="skill-info">
                     <span className="skill-name">{skill.name}</span>
-                    <span className="skill-percentage">{skill.level}%</span>
+                    <span className="skill-percentage">{skill.percentage}%</span>
                   </div>
                   <div className="skill-bar">
                     <motion.div 
                       className="skill-progress"
                       style={{ backgroundColor: skill.color }}
                       initial={{ width: 0 }}
-                      animate={skillsInView ? { width: `${skill.level}%` } : {}}
+                      animate={skillsInView ? { width: `${skill.percentage}%` } : {}}
                       transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
                     />
                   </div>
@@ -480,46 +509,53 @@ function App() {
               <p>Let's create something extraordinary together</p>
               
               <div className="contact-details">
-                <motion.a 
-                  href="mailto:hello@example.com" 
-                  className="contact-item"
-                  whileHover={{ x: 5 }}
-                >
+                <div className="contact-item">
                   <span className="contact-icon">✉</span>
                   <span>hello@example.com</span>
-                </motion.a>
-                
-                <motion.a 
-                  href="#" 
-                  className="contact-item"
-                  whileHover={{ x: 5 }}
-                >
+                </div>
+                <div className="contact-item">
                   <span className="contact-icon">📱</span>
                   <span>+1 234 567 890</span>
-                </motion.a>
-                
-                <motion.a 
-                  href="#" 
-                  className="contact-item"
-                  whileHover={{ x: 5 }}
-                >
+                </div>
+                <div className="contact-item">
                   <span className="contact-icon">📍</span>
                   <span>San Francisco, CA</span>
-                </motion.a>
+                </div>
               </div>
 
               <div className="social-links">
-                {['GH', 'LI', 'TW', 'IG'].map((social, index) => (
-                  <motion.a 
-                    key={index}
-                    href="#"
-                    className="social-link"
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {social}
-                  </motion.a>
-                ))}
+                <motion.a 
+                  href="#" 
+                  className="social-link"
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  GH
+                </motion.a>
+                <motion.a 
+                  href="#" 
+                  className="social-link"
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  LI
+                </motion.a>
+                <motion.a 
+                  href="#" 
+                  className="social-link"
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  TW
+                </motion.a>
+                <motion.a 
+                  href="#" 
+                  className="social-link"
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  IG
+                </motion.a>
               </div>
             </motion.div>
 
@@ -531,22 +567,22 @@ function App() {
             >
               <div className="form-group">
                 <input type="text" placeholder="Your Name" className="form-input" />
-                <span className="input-border"></span>
+                <div className="input-border"></div>
               </div>
               
               <div className="form-group">
                 <input type="email" placeholder="Your Email" className="form-input" />
-                <span className="input-border"></span>
+                <div className="input-border"></div>
               </div>
               
               <div className="form-group">
                 <input type="text" placeholder="Subject" className="form-input" />
-                <span className="input-border"></span>
+                <div className="input-border"></div>
               </div>
               
               <div className="form-group">
                 <textarea placeholder="Your Message" rows="5" className="form-input"></textarea>
-                <span className="input-border"></span>
+                <div className="input-border"></div>
               </div>
               
               <motion.button 
@@ -566,37 +602,12 @@ function App() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-container">
-          <motion.div 
-            className="footer-text"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            <p>© 2024 Creative Portfolio. All rights reserved.</p>
-          </motion.div>
-          
-          <motion.div 
-            className="footer-links"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-          >
+          <p>© 2024 PORTFOLIO. All rights reserved.</p>
+          <div className="footer-links">
             <a href="#">Privacy</a>
             <a href="#">Terms</a>
             <a href="#">Credits</a>
-          </motion.div>
-          
-          <motion.a 
-            href="#" 
-            className="back-to-top"
-            whileHover={{ y: -5 }}
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          >
-            ↑
-          </motion.a>
+          </div>
         </div>
       </footer>
     </div>

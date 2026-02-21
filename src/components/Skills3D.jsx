@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -16,8 +16,9 @@ export default function Skills3D({ skills }) {
     
     spheresRef.current.forEach((sphere, i) => {
       if (sphere) {
-        sphere.position.x = Math.sin(time * 0.5 + i) * 3;
-        sphere.position.y = Math.cos(time * 0.5 + i) * 3;
+        sphere.position.x = Math.sin(time * 0.8 + i) * 2.5;
+        sphere.position.y = Math.cos(time * 0.8 + i) * 2.5;
+        sphere.position.z = Math.sin(time * 0.5 + i) * 1.5;
       }
     });
   });
@@ -31,31 +32,20 @@ export default function Skills3D({ skills }) {
         const z = Math.sin(angle) * radius;
         
         return (
-          <group key={skill.name}>
-            <mesh
-              ref={(el) => (spheresRef.current[index] = el)}
-              position={[x, 0, z]}
-            >
-              <sphereGeometry args={[0.5 + skill.level / 200, 32, 32]} />
-              <meshStandardMaterial
-                color={skill.color}
-                emissive={skill.color}
-                emissiveIntensity={0.3}
-                roughness={0.2}
-                metalness={0.3}
-              />
-            </mesh>
-            
-            <Text
-              position={[x, 1, z]}
-              fontSize={0.3}
-              color="white"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {skill.name}
-            </Text>
-          </group>
+          <mesh
+            key={skill.name}
+            ref={(el) => (spheresRef.current[index] = el)}
+            position={[x, 0, z]}
+          >
+            <sphereGeometry args={[0.4 + skill.percentage / 200, 32, 32]} />
+            <meshStandardMaterial
+              color={skill.color}
+              emissive={skill.color}
+              emissiveIntensity={0.3}
+              roughness={0.2}
+              metalness={0.5}
+            />
+          </mesh>
         );
       })}
     </group>

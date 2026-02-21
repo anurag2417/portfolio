@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Torus, Text, Html } from '@react-three/drei';
-import * as THREE from 'three';
+import { Box, Torus, Text } from '@react-three/drei';
 
 export default function Project3D({ project }) {
   const groupRef = useRef();
@@ -21,15 +20,15 @@ export default function Project3D({ project }) {
     }
     
     if (ringRef.current) {
-      ringRef.current.rotation.x = time * 0.1;
-      ringRef.current.rotation.z = time * 0.2;
+      ringRef.current.rotation.x = time * 0.2;
+      ringRef.current.rotation.z = time * 0.3;
     }
   });
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
       {/* Main Cube */}
-      <Box ref={cubeRef} args={[1.5, 1.5, 1.5]}>
+      <Box ref={cubeRef} args={[1.2, 1.2, 1.2]}>
         <meshStandardMaterial
           color={project.color}
           emissive={project.color}
@@ -42,7 +41,7 @@ export default function Project3D({ project }) {
       </Box>
 
       {/* Wireframe Cube */}
-      <Box args={[1.8, 1.8, 1.8]}>
+      <Box args={[1.5, 1.5, 1.5]}>
         <meshStandardMaterial
           color="white"
           wireframe
@@ -54,29 +53,29 @@ export default function Project3D({ project }) {
       {/* Orbiting Rings */}
       <Torus
         ref={ringRef}
-        args={[1.2, 0.05, 16, 100]}
+        args={[1, 0.03, 16, 100]}
         rotation={[Math.PI / 2, 0, 0]}
       >
         <meshStandardMaterial color={project.color} emissive={project.color} emissiveIntensity={0.3} />
       </Torus>
 
       <Torus
-        args={[1.4, 0.03, 16, 100]}
+        args={[1.2, 0.02, 16, 100]}
         rotation={[0, Math.PI / 2, 0]}
       >
         <meshStandardMaterial color="white" emissive="white" emissiveIntensity={0.2} />
       </Torus>
 
-      {/* Floating Particles */}
-      {Array.from({ length: 20 }).map((_, i) => {
-        const angle = (i / 20) * Math.PI * 2;
-        const radius = 2;
+      {/* Floating Dots */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const angle = (i / 8) * Math.PI * 2;
+        const radius = 1.8;
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
         
         return (
           <mesh key={i} position={[x, y, 0]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
+            <sphereGeometry args={[0.08, 8, 8]} />
             <meshStandardMaterial color="white" emissive="white" emissiveIntensity={0.5} />
           </mesh>
         );
